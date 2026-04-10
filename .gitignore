@@ -1,0 +1,12 @@
+.env
+auth.json
+audio_cache/
+sessions/
+logs/
+state.db
+state.db-shm
+state.db-wal
+hermes-agent/
+gateway.pid
+gateway_state.json
+*.pid

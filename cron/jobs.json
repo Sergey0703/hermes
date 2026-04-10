@@ -1,0 +1,337 @@
+{
+  "jobs": [
+    {
+      "id": "e10f0c7b6f2e",
+      "name": "SEO Monitor Aimediaflow",
+      "prompt": "IMPORTANT: You have access to built-in tools. Use them directly:\n- For web search: call web_search() tool\n- For saving files: call write_file() tool  \n- For terminal commands: call terminal() tool\nDo NOT write Python code blocks. Do NOT use exec(). Use tools directly.\n\nYou are an SEO expert assistant.\nTask: Check the Google ranking position for the domain \"aimediaflow.net\".\n\nTarget Keywords to search:\n1. \"AI Agency Ireland\"\n2. \"AI Killarney\"\n3. \"AI Kerry\"\n4. \"Artificial Intelligence Kerry\"\n5. \"AI services Killarney\"\n6. \"AI automation Ireland\"\n\nInstructions:\n1. For each keyword, use `web_search` to find the current Google results (simulate location Ireland).\n2. Locate where \"aimediaflow.net\" appears in the results (1st, 2nd, ... 10th). If it's not in the first 10, mark as \">10\".\n3. Maintain history in a JSON file at `/home/hermes_user/.hermes/seo_history.json`.\n   - Format: {\"keyword\": {\"current_rank\": int, \"last_rank\": int}}\n   - If file doesn't exist, create it (this is the first run).\n   - If it exists, read old ranks, compare, then save new ranks.\n4. Generate the final response in Russian.\n   - Create a table: Keyword | Current Rank | Trend (\ud83d\udcc8/\ud83d\udcc9/\u2796) | Previous Rank.\n   - Add a short summary of how the site is performing.\n   - Be concise and informative.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 10 * * 1",
+        "display": "0 10 * * 1"
+      },
+      "schedule_display": "0 10 * * 1",
+      "repeat": {
+        "times": null,
+        "completed": 2
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-04-02T21:24:43.657664+00:00",
+      "next_run_at": "2026-04-13T10:00:00+00:00",
+      "last_run_at": "2026-04-06T10:05:07.345459+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "940676896",
+        "chat_name": "\u0421\u0435\u0440\u0433\u0456\u0439 \u0411\u0430\u043b\u044f\u0441\u043d\u0438\u0439",
+        "thread_id": null
+      }
+    },
+    {
+      "id": "83c3b98fb0e9",
+      "name": "Forum Pain Points Monitor",
+      "prompt": "IMPORTANT: You have access to built-in tools. Use them directly:\n- For web search: call web_search() tool\n- For saving files: call write_file() tool  \n- For terminal commands: call terminal() tool\nDo NOT write Python code blocks. Do NOT use exec(). Use tools directly.\n\nAct as a Trend Hunter for AIMediaFlow \u2014 an AI Automation agency in Killarney, Ireland.\n\nTASK: Find exactly 2-3 business pain points or complaints from Irish forums/Reddit.\n\nRULES:\n- Use BOTH Tavily and SearXNG for search (merge results, deduplicate by URL).\n- Focus on Irish SMEs complaining about admin burden, staffing, customer service, wasted time.\n- Do NOT use AI vendor blogs as sources.\n\nSave to: /home/hermes_user/.hermes/forum-pain-points.md\n\nFormat:\n# Forum Pain Points \u2014 {DATE}\n## Pain Point Title\n- **Quote:** \"...\"\n- **Source:** [link](url)\n- **AI Opportunity:** one-line idea for how AI could fix this",
+      "skills": [],
+      "skill": null,
+      "model": "qwen-plus",
+      "provider": null,
+      "base_url": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "15 5 * * *",
+        "display": "15 5 * * *"
+      },
+      "schedule_display": "15 5 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 8
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-04-06T19:20:03.457814+00:00",
+      "next_run_at": "2026-04-11T05:15:00+00:00",
+      "last_run_at": "2026-04-10T17:50:24.766469+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "940676896",
+        "chat_name": "\u0421\u0435\u0440\u0433\u0456\u0439 \u0411\u0430\u043b\u044f\u0441\u043d\u0438\u0439",
+        "thread_id": null
+      },
+      "last_delivery_error": null
+    },
+    {
+      "id": "5e86d7595a33",
+      "name": "Case Studies Monitor",
+      "prompt": "IMPORTANT: You have access to built-in tools. Use them directly:\n- For web search: call web_search() tool\n- For saving files: call write_file() tool  \n- For terminal commands: call terminal() tool\nDo NOT write Python code blocks. Do NOT use exec(). Use tools directly.\n\nAct as a Competitive Intelligence Analyst for AIMediaFlow \u2014 an AI Automation agency in Killarney, Ireland.\n\nTASK: Find exactly 2-3 recent case studies of small businesses saving money or time with AI automation.\n\nRULES:\n- Use BOTH Tavily and SearXNG (merge results, deduplicate by URL).\n- Sources: TechCrunch, Forbes, Irish Independent, RTE Business. Must be specific company/industry.\n- Do NOT use AI vendor marketing pages.\n\nSave to: /home/hermes_user/.hermes/competitor-case-studies.md\n\nFormat:\n# Case Studies \u2014 {DATE}\n## Company / Solution\n- **What they did:** ...\n- **Results:** ...\n- **Source:** [link](url)\n- **Applicability for AIMediaFlow:** how we could offer this to Irish clients",
+      "skills": [],
+      "skill": null,
+      "model": "qwen-plus",
+      "provider": null,
+      "base_url": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "30 5 * * *",
+        "display": "30 5 * * *"
+      },
+      "schedule_display": "30 5 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 5
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-04-06T19:20:13.062905+00:00",
+      "next_run_at": "2026-04-11T05:30:00+00:00",
+      "last_run_at": "2026-04-10T17:52:46.716499+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "940676896",
+        "chat_name": "\u0421\u0435\u0440\u0433\u0456\u0439 \u0411\u0430\u043b\u044f\u0441\u043d\u0438\u0439",
+        "thread_id": null
+      },
+      "last_delivery_error": null
+    },
+    {
+      "id": "d18476a830ac",
+      "name": "SME Facts Monitor",
+      "prompt": "IMPORTANT: You have access to built-in tools. Use them directly:\n- For web search: call web_search() tool\n- For saving files: call write_file() tool  \n- For terminal commands: call terminal() tool\nDo NOT write Python code blocks. Do NOT use exec(). Use tools directly.\n\nAct as a Research Analyst for AIMediaFlow \u2014 an AI Automation agency in Killarney, Ireland.\n\nTASK: Find exactly 2-3 verified facts about \"administrative burden\" or \"compliance costs\" for Irish SMEs.\n\nRULES:\n- Use BOTH Tavily (web_search) AND SearXNG (curl http://localhost:8888/search?q=QUERY&format=json) \u2014 merge results, deduplicate by URL.\n- Find hard data from CSO.ie, Ibec, RTE, Irish Times, Chartered Accountants Ireland.\n- Every stat must have a DIRECT URL to a specific article/report. No generic homepage links.\n\nSave to: /home/hermes_user/.hermes/verified-sme-facts.md\n\nFormat:\n# Verified SME Facts \u2014 {DATE}\n## Topic\n- **Fact:** stat with number\n- **Source:** [Title](URL)\n- **Why it matters:** one-liner for our AI automation pitch",
+      "skills": [],
+      "skill": null,
+      "model": "qwen-plus",
+      "provider": null,
+      "base_url": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 5 * * *",
+        "display": "0 5 * * *"
+      },
+      "schedule_display": "0 5 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 5
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-04-06T19:20:22.652390+00:00",
+      "next_run_at": "2026-04-11T05:00:00+00:00",
+      "last_run_at": "2026-04-10T17:56:09.593313+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "940676896",
+        "chat_name": "\u0421\u0435\u0440\u0433\u0456\u0439 \u0411\u0430\u043b\u044f\u0441\u043d\u0438\u0439",
+        "thread_id": null
+      },
+      "last_delivery_error": null
+    },
+    {
+      "id": "e201dfa70f79",
+      "name": "AgentMail Automation Monitor",
+      "prompt": "IMPORTANT: Use built-in tools only. Use terminal() tool to run curl commands. Use write_file() tool to save files. Do NOT write Python code. Do NOT use exec().\n\nAct as an AI Automation Strategist for AIMediaFlow.\n\nTASK: Read emails from theNeuron@agentmail.to and extract 2-3 BLOG TOPICS.\n\nSTEPS:\n1. Use terminal() tool to run this exact curl command:\ncurl -s -H \"Authorization: Bearer am_us_159c342ea700fc0b37b8375dbbea812675b05f6c1ba686bc03b3787e9291c9de\" \"https://api.agentmail.to/v0/inboxes/theNeuron@agentmail.to/threads\"\n\n2. From the JSON response, pick 2-3 most recent thread IDs.\n\n3. For each thread ID, use terminal() to fetch messages:\ncurl -s -H \"Authorization: Bearer am_us_159c342ea700fc0b37b8375dbbea812675b05f6c1ba686bc03b3787e9291c9de\" \"https://api.agentmail.to/v0/inboxes/theNeuron@agentmail.to/threads/THREAD_ID/messages\"\n\n4. Extract blog topic ideas. Ignore general tech news. Focus on AI automation for small businesses, problems AI could solve for Irish SMEs.\n\n5. Use write_file() to save result to: /home/hermes_user/.hermes/email-sourced-topics.md\n\nFormat:\n# Email Sourced Topics \u2014 {DATE}\n## Idea Title\n- **The Spark:** what the email mentioned\n- **The Opportunity:** how we can offer this to Irish clients\n- **Applicability:** High/Medium/Low (explain why)\n- **Source:** Sender + Subject",
+      "skills": [],
+      "skill": null,
+      "model": "qwen-plus",
+      "provider": null,
+      "base_url": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "45 5 * * *",
+        "display": "45 5 * * *"
+      },
+      "schedule_display": "45 5 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 6
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-04-06T19:35:12.098362+00:00",
+      "next_run_at": "2026-04-11T05:45:00+00:00",
+      "last_run_at": "2026-04-10T17:59:37.273740+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "940676896",
+        "chat_name": "\u0421\u0435\u0440\u0433\u0456\u0439 \u0411\u0430\u043b\u044f\u0441\u043d\u0438\u0439",
+        "thread_id": null
+      },
+      "last_delivery_error": null
+    },
+    {
+      "id": "f70243d500ea",
+      "name": "\ud83e\udde0 Morning Topics Aggregator",
+      "prompt": "You are the Chief Editor for AIMediaFlow. Use the blog-pipeline MCP tools.\n\nSTEPS:\n1. Call get_all_topic_titles to get existing topics for deduplication.\n2. Read these files with terminal tool:\n   cat /home/hermes_user/.hermes/verified-sme-facts.md\n   cat /home/hermes_user/.hermes/forum-pain-points.md\n   cat /home/hermes_user/.hermes/competitor-case-studies.md\n   cat /home/hermes_user/.hermes/email-sourced-topics.md\n3. Extract blog topic ideas. Only keep topics about AI automation for Irish SMEs (Hotels, Dental, Legal). Ignore general tech news.\n4. For each NEW topic not in existing titles: call insert_topic with title, description, category, source_type, source_url, source_quote.\n5. Report: how many found, duplicates skipped, how many inserted.",
+      "skills": [],
+      "skill": null,
+      "model": "qwen-plus",
+      "provider": null,
+      "base_url": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 6 * * *",
+        "display": "0 6 * * *"
+      },
+      "schedule_display": "0 6 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 6
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-04-06T19:55:08.963457+00:00",
+      "next_run_at": "2026-04-11T06:00:00+00:00",
+      "last_run_at": "2026-04-10T18:02:11.359667+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "940676896",
+        "chat_name": "\u0421\u0435\u0440\u0433\u0456\u0439 \u0411\u0430\u043b\u044f\u0441\u043d\u0438\u0439",
+        "thread_id": null
+      },
+      "last_delivery_error": null
+    },
+    {
+      "id": "7156eaa9b17a",
+      "name": "\ud83d\udccb Blog Analyst (Outline Builder)",
+      "prompt": "You are a Senior Content Analyst for AIMediaFlow. Use the blog-pipeline MCP tools.\n\nSTEPS:\n1. Call get_next_topic to get the next topic to write about.\n2. If no topic returned, respond \"No new topics\" and stop.\n3. Use web_search to find 3-5 sources about this topic (Irish Times, CSO.ie, Ibec, Forbes, TechCrunch).\n4. Call save_outline with: topic_id, title, hook (opening sentence with a stat), sections=[\"Problem\",\"AI Solution\",\"Real-World Scenario\",\"FAQ\",\"CTA\"], sources (list of {title, url, key_fact}), keywords, target_audience, cta.\n5. Call update_topic_status with topic_id and status=\"analyzed\".\n6. Respond: Outline saved for topic #ID: TITLE",
+      "skills": [],
+      "skill": null,
+      "model": "qwen-plus",
+      "provider": null,
+      "base_url": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "15 6 * * *",
+        "display": "15 6 * * *"
+      },
+      "schedule_display": "15 6 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 6
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-04-06T20:17:35.850861+00:00",
+      "next_run_at": "2026-04-11T06:15:00+00:00",
+      "last_run_at": "2026-04-10T18:21:50.502403+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "deliver": "local",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "940676896",
+        "chat_name": "\u0421\u0435\u0440\u0433\u0456\u0439 \u0411\u0430\u043b\u044f\u0441\u043d\u0438\u0439",
+        "thread_id": null
+      },
+      "last_delivery_error": null
+    },
+    {
+      "id": "b0b1a772d302",
+      "name": "\u270d\ufe0f Blog Writer (First Draft)",
+      "prompt": "You are a Senior Copywriter for AIMediaFlow, an AI automation agency in Killarney, Ireland. Use the blog-pipeline MCP tools.\n\nSTEPS:\n1. Call get_latest_outline to get the outline to write from.\n2. Write a full blog post (1500-2000 words) in English based on the outline. Include:\n   - Hook with hard data and source link\n   - Problem section with Irish statistics\n   - How It Works (step-by-step)\n   - Real-World Scenario with numbers\n   - Comparison table (old vs AI approach)\n   - FAQ (5 questions, schema.org markup)\n   - CTA: Book a free 15-min AI audit at aimediaflow.net\n   Every factual claim must have an [inline source link](URL).\n   Use Irish/British spelling (analyse, optimise).\n   Add frontmatter: title, date, status: draft, meta_description, keywords.\n3. Call save_draft with topic_id, slug (from title), and the full markdown content.\n4. Call update_topic_status with topic_id and status=\"draft\".\n5. Respond: Draft saved: TITLE (word count)",
+      "skills": [],
+      "skill": null,
+      "model": "qwen-plus",
+      "provider": null,
+      "base_url": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "30 6 * * *",
+        "display": "30 6 * * *"
+      },
+      "schedule_display": "30 6 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 5
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-04-06T20:26:30.345828+00:00",
+      "next_run_at": "2026-04-11T06:30:00+00:00",
+      "last_run_at": "2026-04-10T18:23:59.216050+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "deliver": "local",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "940676896",
+        "chat_name": "\u0421\u0435\u0440\u0433\u0456\u0439 \u0411\u0430\u043b\u044f\u0441\u043d\u0438\u0439",
+        "thread_id": null
+      },
+      "last_delivery_error": null
+    },
+    {
+      "id": "e70a69b39069",
+      "name": "\ud83d\udc41 Blog Editor & Publisher",
+      "prompt": "You are the Blog Editor for AIMediaFlow. Your ONLY task is to call the finalize_draft tool from blog-pipeline MCP.\n\nCall finalize_draft with no arguments.\nIt will: set status to ready, add author block, update the database.\nRespond ONLY with the result returned by finalize_draft.",
+      "skills": [],
+      "skill": null,
+      "model": "qwen-plus",
+      "provider": null,
+      "base_url": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "45 6 * * *",
+        "display": "45 6 * * *"
+      },
+      "schedule_display": "45 6 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 10
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-04-06T20:26:46.972744+00:00",
+      "next_run_at": "2026-04-11T06:45:00+00:00",
+      "last_run_at": "2026-04-10T21:09:47.898813+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "940676896",
+        "chat_name": "\u0421\u0435\u0440\u0433\u0456\u0439 \u0411\u0430\u043b\u044f\u0441\u043d\u0438\u0439",
+        "thread_id": null
+      },
+      "last_delivery_error": null
+    }
+  ],
+  "updated_at": "2026-04-10T21:09:47.900452+00:00"
+}
