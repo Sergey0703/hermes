@@ -10,6 +10,7 @@ import re
 import sqlite3
 import os
 import glob
+import requests
 from datetime import datetime
 from pathlib import Path
 
@@ -313,8 +314,62 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
             db_msg = "Warning: topic_id not found in frontmatter, DB not updated."
 
         filename = os.path.basename(filepath)
+        slug = os.path.splitext(filename)[0]
         word_count = len(content.split())
-        return [types.TextContent(type="text", text=f"Finalized: {filename} ({word_count} words). {db_msg}\nMEDIA:{filepath}")]
+
+        # Generate cover image via HuggingFace FLUX.1-schnell
+        cover_msg = "Cover image: skipped (no HF key)."
+        hf_key = ""
+        env_path = os.path.join(os.path.dirname(DB_PATH), ".env")
+        try:
+            with open(env_path) as ef:
+                for line in ef:
+                    if line.startswith("HUGGINGFACE_API_KEY="):
+                        hf_key = line.split("=", 1)[1].strip()
+        except Exception:
+            pass
+
+        if hf_key:
+            covers_dir = os.path.join(os.path.dirname(DB_PATH), "blog-covers")
+            os.makedirs(covers_dir, exist_ok=True)
+            cover_path = os.path.join(covers_dir, f"{slug}.jpg")
+            if not os.path.exists(cover_path):
+                # Extract title for prompt
+                title = slug.replace("-", " ")
+                for line in content.splitlines():
+                    if re.match(r'(?i)^title:', line):
+                        title = line.split(":", 1)[1].strip().strip('"')
+                        break
+                try:
+                    hf_url = "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell"
+                    resp = requests.post(
+                        hf_url,
+                        headers={"Authorization": f"Bearer {hf_key}", "Content-Type": "application/json"},
+                        json={"inputs": f"Professional editorial blog cover photo for article: {title}. Business technology, Irish SME, modern office, 16:9 format.",
+                              "parameters": {"num_inference_steps": 4, "width": 1024, "height": 576}},
+                        timeout=120
+                    )
+                    if resp.status_code == 200:
+                        with open(cover_path, "wb") as cf:
+                            cf.write(resp.content)
+                        size_kb = len(resp.content) // 1024
+                        # Update frontmatter cover_image field
+                        cover_rel = f"blog-covers/{slug}.jpg"
+                        if "cover_image:" in content:
+                            content = re.sub(r'(?i)^cover_image:.*', f'cover_image: {cover_rel}', content, flags=re.MULTILINE)
+                        else:
+                            content = content.replace("status: ready", f"status: ready\ncover_image: {cover_rel}", 1)
+                        with open(filepath, "w", encoding="utf-8") as f:
+                            f.write(content)
+                        cover_msg = f"Cover image: {slug}.jpg ({size_kb}KB)."
+                    else:
+                        cover_msg = f"Cover image: HF API error {resp.status_code}."
+                except Exception as e:
+                    cover_msg = f"Cover image: failed ({e})."
+            else:
+                cover_msg = f"Cover image: already exists."
+
+        return [types.TextContent(type="text", text=f"Finalized: {filename} ({word_count} words). {db_msg} {cover_msg}\nMEDIA:{filepath}")]
 
     return [types.TextContent(type="text", text=f"Unknown tool: {name}")]
 
