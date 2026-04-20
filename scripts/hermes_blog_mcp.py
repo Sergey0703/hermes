@@ -272,8 +272,13 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
         today = datetime.now().strftime("%Y-%m-%d")
         slug = arguments["slug"].lower().replace(" ", "-")
         filepath = os.path.join(DRAFTS_DIR, f"{today}-{slug}.md")
+        content = arguments["content"]
+        # Inject topic_id into frontmatter if missing
+        topic_id_val = arguments.get("topic_id")
+        if topic_id_val and "topic_id:" not in content:
+            content = re.sub(r'^---\n', f'---\ntopic_id: {topic_id_val}\n', content, count=1)
         with open(filepath, "w", encoding="utf-8") as f:
-            f.write(arguments["content"])
+            f.write(content)
         return [types.TextContent(type="text", text=f"Draft saved to {filepath}")]
 
     elif name == "get_latest_draft":
