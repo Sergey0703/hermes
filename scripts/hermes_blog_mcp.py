@@ -21,6 +21,21 @@ from mcp import types
 
 DB_PATH = "/home/hermes_user/.hermes/topics-db.sqlite"
 OUTLINES_DIR = "/home/hermes_user/.hermes/blog-outlines"
+PAPERCLIP_API_URL = os.environ.get("PAPERCLIP_API_URL", "http://localhost:3100")
+PAPERCLIP_API_KEY = os.environ.get("PAPERCLIP_API_KEY", "")
+COMPANY_ID = "b984404a-8587-41d0-9354-a6251bd0fd94"
+AGENT_IDS = {
+    "editorial_manager": "46ad48c3-e8b0-4c5e-b369-6da7fbfa6251",
+    "researcher": "ccc8c5e8-cc55-4432-aa16-0bc73391049e",
+    "sme_facts": "acf7ffec-4aef-43be-b83b-828170c15b17",
+    "case_studies": "527db020-5bf8-41e0-bf8d-20e007e7056e",
+    "mail_monitor": "d52c394d-a175-4b7c-af6c-cf3882c9dc14",
+    "chief_editor": "f18ff445-0515-4397-b814-2a754bd245b1",
+    "production_manager": "bb643d5b-92d6-4c44-8605-0929ca43b3d9",
+    "writer": "b4bcf2d0-0a5f-45c5-891d-f883c16cd5c4",
+    "art_director": "eb8aaa79-f772-4ae8-95d7-5b3d6916c3ef",
+}
+
 DRAFTS_DIR = "/home/hermes_user/.hermes/blog-drafts"
 
 app = Server("hermes-blog-pipeline")
@@ -138,8 +153,43 @@ async def list_tools() -> list[types.Tool]:
             inputSchema={"type": "object", "properties": {}, "required": []},
         ),
         types.Tool(
+            name="lookup_article",
+            description="Look up a blog article by numeric ID or slug. Returns id, title, slug, status.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "article_id": {"type": "integer", "description": "Numeric article ID (e.g. 63)"},
+                    "slug": {"type": "string", "description": "Article slug (alternative to id)"}
+                },
+                "required": []
+            },
+        ),
+        types.Tool(
+            name="create_pipeline_issue",
+            description="Create an issue in Paperclip to delegate a task to a pipeline agent. Agent names: editorial_manager, researcher, sme_facts, case_studies, mail_monitor, chief_editor, production_manager, writer, art_director.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "agent": {"type": "string", "description": "Agent name (e.g. art_director, production_manager)"},
+                    "title": {"type": "string", "description": "Issue title"},
+                    "description": {"type": "string", "description": "Full task description for the agent"}
+                },
+                "required": ["agent", "title", "description"]
+            },
+        ),
+        types.Tool(
+            name="get_pipeline_status",
+            description="Get current blog pipeline status: topic counts by status and pending issues.",
+            inputSchema={"type": "object", "properties": {}, "required": []},
+        ),
+        types.Tool(
             name="finalize_draft",
             description="Finalize the latest draft: sets status to ready, adds author block, updates DB. Returns the file path for delivery.",
+            inputSchema={"type": "object", "properties": {}, "required": []},
+        ),
+        types.Tool(
+            name="publish_to_notion",
+            description="Publish the latest finalized (status: ready) blog article to Notion database. Checks for duplicates by slug. Returns Notion page URL.",
             inputSchema={"type": "object", "properties": {}, "required": []},
         ),
     ]
@@ -271,11 +321,13 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
         return [types.TextContent(type="text", text=json.dumps(titles, ensure_ascii=False))]
 
     elif name == "finalize_draft":
-        # Find latest draft
-        files = sorted(glob.glob(os.path.join(DRAFTS_DIR, "*.md")), reverse=True)
+        # Find latest draft by modification time, skip outline-*.md files
+        all_files = glob.glob(os.path.join(DRAFTS_DIR, "*.md"))
+        files = [f for f in all_files if not os.path.basename(f).startswith("outline-")]
         if not files:
             return [types.TextContent(type="text", text="No draft files found.")]
-        filepath = files[0]
+        filepath = max(files, key=os.path.getmtime)
+
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
 
@@ -371,6 +423,206 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
 
         return [types.TextContent(type="text", text=f"Finalized: {filename} ({word_count} words). {db_msg} {cover_msg}\nMEDIA:{filepath}")]
 
+    elif name == "lookup_article":
+        article_id = arguments.get("article_id")
+        slug = arguments.get("slug")
+        conn = get_db()
+        if article_id:
+            row = conn.execute("SELECT id, title, slug, status FROM topics WHERE id = ?", (article_id,)).fetchone()
+        elif slug:
+            row = conn.execute("SELECT id, title, slug, status FROM topics WHERE slug = ?", (slug,)).fetchone()
+        else:
+            conn.close()
+            return [types.TextContent(type="text", text="Error: provide article_id or slug")]
+        conn.close()
+        if not row:
+            return [types.TextContent(type="text", text=f"Article not found")]
+        result = dict(row)
+        return [types.TextContent(type="text", text=json.dumps(result, ensure_ascii=False, indent=2))]
+
+    elif name == "create_pipeline_issue":
+        agent = arguments.get("agent", "")
+        title = arguments.get("title", "")
+        description = arguments.get("description", "")
+        agent_id = AGENT_IDS.get(agent)
+        if not agent_id:
+            return [types.TextContent(type="text", text=f"Unknown agent: {agent}. Valid: {', '.join(AGENT_IDS.keys())}")]
+        payload = {
+            "title": title,
+            "description": description,
+            "assigneeAgentId": agent_id,
+            "status": "todo",
+            "priority": "high"
+        }
+        resp = requests.post(
+            f"{PAPERCLIP_API_URL}/api/companies/{COMPANY_ID}/issues",
+            headers={"Authorization": f"Bearer {PAPERCLIP_API_KEY}", "Content-Type": "application/json"},
+            json=payload,
+            timeout=10
+        )
+        if resp.status_code in (200, 201):
+            data = resp.json()
+            issue_id = data.get("id", "?")
+            return [types.TextContent(type="text", text=f"Issue created: #{issue_id} assigned to {agent} ({agent_id}). Title: {title}")]
+        else:
+            return [types.TextContent(type="text", text=f"Failed to create issue: {resp.status_code} {resp.text[:200]}")]
+
+    elif name == "get_pipeline_status":
+        conn = get_db()
+        rows = conn.execute("SELECT status, COUNT(*) as cnt FROM topics GROUP BY status").fetchall()
+        conn.close()
+        counts = {row["status"]: row["cnt"] for row in rows}
+        # Get pending issues
+        issues_resp = requests.get(
+            f"{PAPERCLIP_API_URL}/api/companies/{COMPANY_ID}/issues?status=todo&limit=20",
+            headers={"Authorization": f"Bearer {PAPERCLIP_API_KEY}"},
+            timeout=10
+        )
+        pending = []
+        if issues_resp.status_code == 200:
+            data = issues_resp.json()
+            issues = data if isinstance(data, list) else data.get("issues", data.get("data", []))
+            for iss in issues:
+                pending.append(f"#{iss.get('issueNumber','?')} [{iss.get('status','?')}] {iss.get('title','?')}")
+        result = {
+            "topic_counts": counts,
+            "pending_issues": pending
+        }
+        return [types.TextContent(type="text", text=json.dumps(result, ensure_ascii=False, indent=2))]
+
+
+    elif name == "publish_to_notion":
+        import re as _re
+        import time as _time
+        NOTION_TOKEN = os.environ.get("NOTION_TOKEN", "")
+        NOTION_DB_ID = os.environ.get("NOTION_DATABASE_ID", "")
+        if not NOTION_TOKEN or not NOTION_DB_ID:
+            env_path = "/home/hermes_user/.hermes/.env"
+            try:
+                with open(env_path) as ef:
+                    for line in ef:
+                        if line.startswith("NOTION_TOKEN="):
+                            NOTION_TOKEN = line.split("=", 1)[1].strip()
+                        elif line.startswith("NOTION_DATABASE_ID="):
+                            NOTION_DB_ID = line.split("=", 1)[1].strip()
+            except Exception:
+                pass
+        if not NOTION_TOKEN or not NOTION_DB_ID:
+            return [types.TextContent(type="text", text="Error: NOTION_TOKEN or NOTION_DATABASE_ID not set in env or .env file")]
+
+        # Find latest ready draft by mtime, skip outline-*.md
+        all_files = glob.glob(os.path.join(DRAFTS_DIR, "*.md"))
+        files = sorted(
+            [f for f in all_files if not os.path.basename(f).startswith("outline-")],
+            key=os.path.getmtime, reverse=True
+        )
+        if not files:
+            return [types.TextContent(type="text", text="No draft files found.")]
+
+        filepath = None
+        for f in files:
+            with open(f) as fh:
+                head = fh.read(500)
+            if "status: ready" in head or "status:ready" in head:
+                filepath = f
+                break
+        if not filepath:
+            return [types.TextContent(type="text", text="No ready articles found in blog-drafts.")]
+
+        with open(filepath) as fh:
+            raw = fh.read()
+
+        fm_match = _re.match(r"---\n(.*?)\n---", raw, _re.DOTALL)
+        fm = {}
+        if fm_match:
+            for line in fm_match.group(1).splitlines():
+                if ":" in line:
+                    k, v = line.split(":", 1)
+                    fm[k.strip()] = v.strip().strip('"')
+        body = raw[fm_match.end():].strip() if fm_match else raw
+
+        slug = os.path.splitext(os.path.basename(filepath))[0]
+        title = fm.get("title", slug)
+        date = fm.get("date", slug[:10])
+        meta = fm.get("meta_description", "")[:2000]
+        cover_url = fm.get("cover_image", "")
+        if cover_url and not cover_url.startswith("http"):
+            cover_url = "https://aimediaflow.net/" + cover_url.lstrip("/")
+
+        notion_headers = {
+            "Authorization": f"Bearer {NOTION_TOKEN}",
+            "Notion-Version": "2022-06-28",
+            "Content-Type": "application/json"
+        }
+
+        # Check duplicate by slug
+        check = requests.post(
+            f"https://api.notion.com/v1/databases/{NOTION_DB_ID}/query",
+            headers=notion_headers,
+            json={"filter": {"property": "Slug", "rich_text": {"equals": slug}}},
+            timeout=15
+        )
+        if check.status_code == 200 and check.json().get("results"):
+            return [types.TextContent(type="text", text=f"Already published in Notion: {slug}")]
+
+        # Convert markdown to Notion blocks
+        def md_to_blocks(md):
+            blocks = []
+            for line in md.splitlines():
+                line = line.rstrip()
+                if not line:
+                    continue
+                if line.startswith("### "):
+                    blocks.append({"object": "block", "type": "heading_3", "heading_3": {"rich_text": [{"type": "text", "text": {"content": line[4:][:2000]}}]}})
+                elif line.startswith("## "):
+                    blocks.append({"object": "block", "type": "heading_2", "heading_2": {"rich_text": [{"type": "text", "text": {"content": line[3:][:2000]}}]}})
+                elif line.startswith("# "):
+                    blocks.append({"object": "block", "type": "heading_1", "heading_1": {"rich_text": [{"type": "text", "text": {"content": line[2:][:2000]}}]}})
+                elif line.startswith("- ") or line.startswith("* "):
+                    blocks.append({"object": "block", "type": "bulleted_list_item", "bulleted_list_item": {"rich_text": [{"type": "text", "text": {"content": line[2:][:2000]}}]}})
+                elif line.startswith("> "):
+                    blocks.append({"object": "block", "type": "quote", "quote": {"rich_text": [{"type": "text", "text": {"content": line[2:][:2000]}}]}})
+                else:
+                    blocks.append({"object": "block", "type": "paragraph", "paragraph": {"rich_text": [{"type": "text", "text": {"content": line[:2000]}}]}})
+            return blocks
+
+        blocks = md_to_blocks(body)
+
+        props = {
+            "Name": {"title": [{"type": "text", "text": {"content": title[:2000]}}]},
+            "Title": {"rich_text": [{"type": "text", "text": {"content": title[:2000]}}]},
+            "Status": {"select": {"name": "ready"}},
+            "Slug": {"rich_text": [{"type": "text", "text": {"content": slug}}]},
+            "Meta Description": {"rich_text": [{"type": "text", "text": {"content": meta}}]},
+        }
+        if date:
+            props["Date"] = {"date": {"start": date[:10]}}
+        if cover_url:
+            props["Cover URL"] = {"url": cover_url}
+
+        create_resp = requests.post(
+            "https://api.notion.com/v1/pages",
+            headers=notion_headers,
+            json={"parent": {"database_id": NOTION_DB_ID}, "properties": props, "children": blocks[:100]},
+            timeout=30
+        )
+        if create_resp.status_code not in (200, 201):
+            return [types.TextContent(type="text", text=f"Notion API error: {create_resp.status_code} {create_resp.text[:300]}")]
+
+        page_id = create_resp.json()["id"]
+
+        for i in range(100, len(blocks), 100):
+            requests.patch(
+                f"https://api.notion.com/v1/blocks/{page_id}/children",
+                headers=notion_headers,
+                json={"children": blocks[i:i + 100]},
+                timeout=30
+            )
+            _time.sleep(0.35)
+
+        page_url = f"https://notion.so/{page_id.replace('-', '')}"
+        return [types.TextContent(type="text", text=f"Published to Notion: {title}\nSlug: {slug}\nPage: {page_url}")]
+
     return [types.TextContent(type="text", text=f"Unknown tool: {name}")]
 
 
@@ -382,3 +634,5 @@ async def main():
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
+
+# ===== NOTION PUBLISH PATCH =====
