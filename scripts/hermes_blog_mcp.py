@@ -19,8 +19,8 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp import types
 
-DB_PATH = "/home/hermes_user/.hermes/topics-db.sqlite"
-OUTLINES_DIR = "/home/hermes_user/.hermes/blog-outlines"
+DB_PATH = "/opt/blog-pipeline/topics-db.sqlite"
+OUTLINES_DIR = "/opt/blog-pipeline/blog-outlines"
 PAPERCLIP_API_URL = os.environ.get("PAPERCLIP_API_URL", "http://localhost:3100")
 PAPERCLIP_API_KEY = os.environ.get("PAPERCLIP_API_KEY", "")
 COMPANY_ID = "b984404a-8587-41d0-9354-a6251bd0fd94"
@@ -36,7 +36,7 @@ AGENT_IDS = {
     "art_director": "eb8aaa79-f772-4ae8-95d7-5b3d6916c3ef",
 }
 
-DRAFTS_DIR = "/home/hermes_user/.hermes/blog-drafts"
+DRAFTS_DIR = "/opt/blog-pipeline/blog-drafts"
 
 app = Server("hermes-blog-pipeline")
 
@@ -497,7 +497,7 @@ async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
         NOTION_TOKEN = os.environ.get("NOTION_TOKEN", "")
         NOTION_DB_ID = os.environ.get("NOTION_DATABASE_ID", "")
         if not NOTION_TOKEN or not NOTION_DB_ID:
-            env_path = "/home/hermes_user/.hermes/.env"
+            env_path = "/opt/blog-pipeline/.env"
             try:
                 with open(env_path) as ef:
                     for line in ef:
