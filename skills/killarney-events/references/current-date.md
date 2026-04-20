@@ -1,0 +1,1 @@
+To find the current date, use a search engine or a calendar website.
