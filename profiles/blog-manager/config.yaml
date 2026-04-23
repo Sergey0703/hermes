@@ -1,0 +1,24 @@
+model:
+  provider: ollama-cloud
+  default: gemma4:31b
+  context_length: 131072
+
+fallback_model:
+  provider: custom
+  model: qwen-plus
+  base_url: http://localhost:4000
+  api_key: sk-litellm-agents-2026
+
+TELEGRAM_HOME_CHANNEL: 940676896
+
+platform_toolsets:
+  telegram:
+  - terminal
+  - web
+
+timezone: "Europe/Dublin"
+
+web:
+  backend: exa
+
+_config_version: 19
